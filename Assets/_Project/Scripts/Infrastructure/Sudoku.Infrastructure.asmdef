@@ -1,0 +1,18 @@
+{
+    "name": "Sudoku.Infrastructure",
+    "rootNamespace": "Sudoku.Infrastructure",
+    "references": [
+        "Sudoku.Core",
+        "Sudoku.Services",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

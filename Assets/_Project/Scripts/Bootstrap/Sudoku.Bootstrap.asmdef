@@ -1,0 +1,20 @@
+{
+    "name": "Sudoku.Bootstrap",
+    "rootNamespace": "Sudoku.Bootstrap",
+    "references": [
+        "Sudoku.Core",
+        "Sudoku.Services",
+        "Sudoku.Infrastructure",
+        "Sudoku.UI",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

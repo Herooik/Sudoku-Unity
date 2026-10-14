@@ -1,0 +1,21 @@
+{
+    "name": "Sudoku.UI",
+    "rootNamespace": "Sudoku.UI",
+    "references": [
+        "Sudoku.Core",
+        "Sudoku.Services",
+        "UniTask",
+        "VContainer",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

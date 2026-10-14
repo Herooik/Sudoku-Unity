@@ -1,0 +1,17 @@
+{
+    "name": "Sudoku.Services",
+    "rootNamespace": "Sudoku.Services",
+    "references": [
+        "Sudoku.Core",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
