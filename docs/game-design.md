@@ -88,6 +88,11 @@ The solver and the uniqueness validator work on `GridShape` plus a digit array o
   - Queries: `BoxRows`, `BoxColumns`, `Size`, `CellCount`, `Units`, `Boxes`, `GetPeers(index)`, `ToIndex(CellPosition)`, `ToPosition(index)`. A position or index outside the grid throws `ArgumentOutOfRangeException`. The order of `Units` is internal; `Boxes` has a guaranteed order (boxes and their cells row by row) because the board view lays cells out with it.
   - Collections are `IReadOnlyList<int>` wrapped once with `Array.AsReadOnly`, so the shared shape cannot be modified through a cast. Rejected: returning `int[]` (mutable by callers), `ReadOnlySpan<int>` (cannot be stored in fields or used in lambdas; premature before the solver is measured).
   - `CellPosition` is a readonly struct (row, column), a pure address. Not named `GridCell`, because "cell" is reserved for the board's view of a cell with its contents.
+- **`Board`**: the mutable state of one game, built from a `Puzzle` (the givens are copied, the puzzle stays untouched).
+  - API: `GetValue(index)`, `IsGiven(index)`, `HasMistake(index)` (a digit that differs from the solution, decision A), `IsSolved`, `SetValue(index, value)` with value 1..N, `Clear(index)` for Erase. A bad index or value throws `ArgumentOutOfRangeException`; changing a given throws `InvalidOperationException`, so givens are locked by the board itself and no later path (hint, undo, save restore) can overwrite them.
+  - `CellChanged(index)` is raised only when a value really changes. Digits will change through many paths (number pad, keyboard, hint, undo, note clearing), so the presenter subscribes once instead of every caller telling the view. Rejected: methods returning the list of changed cells.
+  - `Board` does not count mistakes or decide win/lose; that is `GameSession`. `IsSolved` scans all cells on every call. Rejected: a running counter of correct cells (more state to keep right, no measurable gain at 81–256 cells).
+  - Addressing is the flat index, the same as `GridShape.GetPeers` and the board view; no `Cell` view struct until a caller needs value, given and mistake together.
 - **Cell addressing**: a flat index `0..N²-1` internally, a small row/column struct in the API for UI.
 - **Values**: `int` 1..N, 0 = empty. Showing "7" or "C" is a UI concern.
 - **Notes**: a `uint` bitmask wrapped in a small struct (`CandidateSet`), bit k = digit k, bit 0 unused. Digits 1..16 need bits 1..16, which is 17 bits, so a `ushort` is too small. Rejected: bit k-1 = digit k in a `ushort` (saves 2 bytes per cell, invites off-by-one errors); `HashSet<int>` per cell (allocations, expensive undo copies).
@@ -110,7 +115,7 @@ One character per cell: `.` empty, `1`–`9`, then `A`–`G` for values 10–16.
 2. ~~Skeleton~~ done: `Sudoku.Core` and `Sudoku.Tests.EditMode` asmdefs under `Assets/_Project/`, ADR 001, architecture table in `CLAUDE.md`, MCP permissions in `.claude/settings.json`. Other asmdefs come with their first code.
 3. ~~`GridShape`~~ done: units, peers and cell addressing, covered by `GridShapeTests`.
 4. ~~First vertical slice "Menu → New game → board with givens"~~ done (ADR 002): `Puzzle`, `IPuzzleProvider` / `TextAssetPuzzleProvider`, menu and board views and presenters, `GameLifetimeScope`, scene `Main` with screen prefabs. The board fits portrait and landscape screens.
-5. **Now: first WebGL build on itch.io** (draft page), see `docs/build.md`.
-6. Next: a single colour theme asset (all view colours come from it), then the interactive board: `Board` in Core (values, locked givens), cell selection with peer highlighting, number pad, mistakes.
+5. ~~First WebGL build~~ done, see `docs/build.md`; CI runs the EditMode tests on every pull request (`docs/ci.md`).
+6. **Now: the interactive board.** ~~`Board` in Core (values, locked givens, mistakes, solved)~~ done, covered by `BoardTests`. Next: cell selection with peer and same-digit highlighting, number pad, wrong digits in red, solved state, with all view colours from a single theme asset.
 7. Before the first public release: build size pass (checklist in `docs/build.md`).
 8. Then: `CandidateSet` (the notes bitmask; first test case: on the 6×6 example puzzle, cell (3,4) has candidates {5, 6}), undo/redo commands, `GameSession` (mistake limit, win), solver and uniqueness validator.
