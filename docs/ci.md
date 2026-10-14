@@ -28,15 +28,15 @@ Recent Unity Hub versions store a Personal license as `%LOCALAPPDATA%\Unity\lice
 
 ## Protecting `master`
 
-Branch rules are only enforced in public repositories on the free GitHub plan. While the repository is private, the flow above is a working agreement. When it becomes public (with the README and the first release), add a ruleset:
-
-Settings → Rules → Rulesets → New branch ruleset, target `master`:
+The repository is public, so GitHub enforces the "Protect master" ruleset (Settings → Rules → Rulesets) instead of relying on a working agreement:
 
 - Restrict deletions; Block force pushes.
-- Require a pull request before merging, with **0** required approvals (GitHub does not let you approve your own pull request).
-- Require status checks to pass: the "EditMode tests" job; require branches to be up to date before merging.
-- Leave the bypass list empty, so the rules apply to the owner too.
+- Require a pull request before merging, with **0** required approvals (GitHub does not let you approve your own pull request). Review comment threads must be resolved before merging.
+- Require status checks to pass: the "EditMode tests" job; branches must be up to date with `master` before merging.
+- The bypass list is empty, so the rules apply to the owner too.
+
+To check what is enforced without opening the settings: `https://api.github.com/repos/Herooik/Sudoku-Unity/rules/branches/master`.
 
 ## Cost
 
-Private repositories on the free plan get 2,000 Actions minutes a month; one run takes roughly 10–15 minutes without a warm cache. Public repositories have no limit on standard runners.
+Public repositories have no limit on Actions minutes for standard runners, and those runners have 16 GB of RAM. Private repositories on the free plan get 2,000 minutes a month and 7 GB runners, which is not enough memory for a Unity import (the job is killed with exit code 137). One run takes roughly 10–15 minutes without a warm cache.
