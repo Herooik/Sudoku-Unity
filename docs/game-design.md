@@ -116,6 +116,6 @@ One character per cell: `.` empty, `1`–`9`, then `A`–`G` for values 10–16.
 3. ~~`GridShape`~~ done: units, peers and cell addressing, covered by `GridShapeTests`.
 4. ~~First vertical slice "Menu → New game → board with givens"~~ done (ADR 002): `Puzzle`, `IPuzzleProvider` / `TextAssetPuzzleProvider`, menu and board views and presenters, `GameLifetimeScope`, scene `Main` with screen prefabs. The board fits portrait and landscape screens.
 5. ~~First WebGL build~~ done, see `docs/build.md`; CI runs the EditMode tests on every pull request (`docs/ci.md`).
-6. **Now: the interactive board.** ~~`Board` in Core (values, locked givens, mistakes, solved)~~ done, covered by `BoardTests`. Next: cell selection with peer and same-digit highlighting, number pad, wrong digits in red, solved state, with all view colours from a single theme asset.
+6. ~~The interactive board~~ done (ADR 003): `Board` in Core (values, locked givens, mistakes, solved), cell selection with row, column, box and same-digit highlighting, number pad with Erase, wrong digits in red, a "Solved" message, all board colours from `BoardTheme`. Next: keyboard input (digits, arrows, Backspace).
 7. Before the first public release: build size pass (checklist in `docs/build.md`).
 8. Then: `CandidateSet` (the notes bitmask; first test case: on the 6×6 example puzzle, cell (3,4) has candidates {5, 6}), undo/redo commands, `GameSession` (mistake limit, win), solver and uniqueness validator.
