@@ -13,10 +13,14 @@ namespace Sudoku.UI
 		[SerializeField] private GridLayoutGroup _boxesLayout;
 		[SerializeField] private GridLayoutGroup _boxPrefab;
 		[SerializeField] private CellView _cellPrefab;
+		[SerializeField] private BoardTheme _theme;
+		[SerializeField] private GameObject _solvedLabel;
 
 		private readonly List<GridLayoutGroup> _boxes = new();
 		private CellView[] _cells = Array.Empty<CellView>();
 		private GridShape _shape;
+
+		public event Action<int> CellClicked;
 
 		// Called by Unity when the rect changes: panel shown, WebGL window resized, phone rotated.
 		private void OnRectTransformDimensionsChange()
@@ -41,22 +45,32 @@ namespace Sudoku.UI
 
 				foreach (var cellIndex in shape.Boxes[box])
 				{
-					_cells[cellIndex] = Instantiate(_cellPrefab, boxLayout.transform);
+					var cell = Instantiate(_cellPrefab, boxLayout.transform);
+
+					// The cell does not know its index; the board does, because it laid the cells out.
+					var clickedIndex = cellIndex;
+					cell.Clicked += () => CellClicked?.Invoke(clickedIndex);
+
+					_cells[cellIndex] = cell;
 				}
 			}
 
 			ApplySizes();
 		}
 
-		public void SetCellText(int cellIndex, string text)
+		public void SetCellContent(int cellIndex, string text, CellTextStyle style)
 		{
-			if (cellIndex < 0 || cellIndex >= _cells.Length)
-			{
-				throw new ArgumentOutOfRangeException(nameof(cellIndex), cellIndex,
-					$"Board has {_cells.Length} cells. Was Build called first?");
-			}
+			GetCell(cellIndex).SetText(text, _theme.GetTextColor(style));
+		}
 
-			_cells[cellIndex].SetText(text);
+		public void SetCellHighlight(int cellIndex, CellHighlight highlight)
+		{
+			GetCell(cellIndex).SetBackground(_theme.GetBackground(highlight));
+		}
+
+		public void SetSolvedVisible(bool visible)
+		{
+			_solvedLabel.SetActive(visible);
 		}
 
 		public void SetVisible(bool visible)
@@ -114,6 +128,17 @@ namespace Sudoku.UI
 		{
 			var boxLength = (length - boardPadding - boxGap * (boxCount - 1)) / boxCount;
 			return (boxLength - boxPadding - cellGap * (cellsPerBox - 1)) / cellsPerBox;
+		}
+
+		private CellView GetCell(int cellIndex)
+		{
+			if (cellIndex < 0 || cellIndex >= _cells.Length)
+			{
+				throw new ArgumentOutOfRangeException(nameof(cellIndex), cellIndex,
+					$"Board has {_cells.Length} cells. Was Build called first?");
+			}
+
+			return _cells[cellIndex];
 		}
 
 		private void ClearBoxes()
