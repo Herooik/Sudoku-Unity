@@ -12,12 +12,14 @@ namespace Sudoku.Bootstrap
 	{
 		[SerializeField] private MenuView _menuView;
 		[SerializeField] private BoardView _boardView;
+		[SerializeField] private NumberPadView _numberPadView;
 		[SerializeField] private TextAsset _puzzleJson;
 
 		protected override void Configure(IContainerBuilder builder)
 		{
 			builder.RegisterComponent(_menuView).As<IMenuView>();
 			builder.RegisterComponent(_boardView).As<IBoardView>();
+			builder.RegisterComponent(_numberPadView).As<INumberPadView>();
 
 			// Swapping to Addressables later changes only this registration (ADR 002).
 			builder.Register<IPuzzleProvider, TextAssetPuzzleProvider>(Lifetime.Singleton).WithParameter(_puzzleJson);

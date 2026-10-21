@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 889fa810bd50491459df0c635aab32cc, type: 3}
+  m_Name: DefaultBoardTheme
+  m_EditorClassIdentifier: Sudoku.UI::Sudoku.UI.BoardTheme
+  _cellBackground: {r: 1, g: 1, b: 1, a: 1}
+  _peerBackground: {r: 0.91, g: 0.93, b: 0.96, a: 1}
+  _sameDigitBackground: {r: 0.78, g: 0.86, b: 0.98, a: 1}
+  _selectedBackground: {r: 0.62, g: 0.76, b: 0.96, a: 1}
+  _givenText: {r: 0.13, g: 0.13, b: 0.13, a: 1}
+  _playerText: {r: 0.16, g: 0.36, b: 0.75, a: 1}
+  _mistakeText: {r: 0.85, g: 0.2, b: 0.2, a: 1}

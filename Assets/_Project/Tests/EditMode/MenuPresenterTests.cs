@@ -17,7 +17,7 @@ namespace Sudoku.Tests.EditMode
 			_menuView = new FakeMenuView();
 			_boardView = new FakeBoardView();
 			_provider = new FakePuzzleProvider();
-			_presenter = new MenuPresenter(_menuView, _provider, new BoardPresenter(_boardView));
+			_presenter = new MenuPresenter(_menuView, _provider, new BoardPresenter(_boardView, new FakeNumberPadView()));
 		}
 
 		[Test]
