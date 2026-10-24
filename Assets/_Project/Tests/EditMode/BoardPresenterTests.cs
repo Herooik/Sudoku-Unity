@@ -23,6 +23,7 @@ namespace Sudoku.Tests.EditMode
 
 		private FakeBoardView _view;
 		private FakeNumberPadView _numberPad;
+		private FakeBoardKeyboardView _keyboard;
 		private BoardPresenter _presenter;
 
 		[SetUp]
@@ -30,7 +31,8 @@ namespace Sudoku.Tests.EditMode
 		{
 			_view = new FakeBoardView();
 			_numberPad = new FakeNumberPadView();
-			_presenter = new BoardPresenter(_view, _numberPad);
+			_keyboard = new FakeBoardKeyboardView();
+			_presenter = new BoardPresenter(_view, _numberPad, _keyboard);
 		}
 
 		[Test]
@@ -227,6 +229,87 @@ namespace Sudoku.Tests.EditMode
 
 			Assert.That(_view.HasSubscribers, Is.False);
 			Assert.That(_numberPad.HasSubscribers, Is.False);
+			Assert.That(_keyboard.HasSubscribers, Is.False);
+		}
+
+		[Test]
+		public void DigitPressed_EmptySelectedCell_PlacesDigit()
+		{
+			_presenter.Show(CreatePuzzle());
+			_view.ClickCell(EmptyCell);
+
+			_keyboard.PressDigit(EmptyCellSolution);
+
+			Assert.That(_view.CellTexts[EmptyCell], Is.EqualTo("2"));
+		}
+
+		[Test]
+		public void DigitPressed_DigitAboveGridSize_ChangesNothing()
+		{
+			_presenter.Show(CreatePuzzle());
+			_view.ClickCell(EmptyCell);
+
+			Assert.DoesNotThrow(() => _keyboard.PressDigit(9));
+			Assert.That(_view.CellTexts[EmptyCell], Is.EqualTo(""));
+		}
+
+		[Test]
+		public void ErasePressed_PlayerCell_ClearsIt()
+		{
+			_presenter.Show(CreatePuzzle());
+			_view.ClickCell(EmptyCell);
+			_keyboard.PressDigit(EmptyCellWrongValue);
+
+			_keyboard.PressErase();
+
+			Assert.That(_view.CellTexts[EmptyCell], Is.EqualTo(""));
+		}
+
+		[Test]
+		public void MovePressed_NoSelection_SelectsCentreWithoutMoving()
+		{
+			_presenter.Show(CreatePuzzle());
+
+			_keyboard.PressMove(0, 1);
+
+			// (2,2) on a 4×4 grid; the right arrow does not move it to (2,3).
+			Assert.That(_view.CellsWith(CellHighlight.Selected), Is.EqualTo(new[] { 10 }));
+		}
+
+		[Test]
+		public void MovePressed_Right_SelectsNextColumn()
+		{
+			_presenter.Show(CreatePuzzle());
+			_view.ClickCell(EmptyCell);
+
+			_keyboard.PressMove(0, 1);
+
+			Assert.That(_view.CellsWith(CellHighlight.Selected), Is.EqualTo(new[] { 2 }));
+		}
+
+		[Test]
+		public void MovePressed_Down_SelectsNextRow()
+		{
+			_presenter.Show(CreatePuzzle());
+			_view.ClickCell(EmptyCell);
+
+			_keyboard.PressMove(1, 0);
+
+			Assert.That(_view.CellsWith(CellHighlight.Selected), Is.EqualTo(new[] { 5 }));
+		}
+
+		[TestCase(3, 0, 1)]
+		[TestCase(0, -1, 0)]
+		[TestCase(15, 1, 0)]
+		[TestCase(12, 0, -1)]
+		public void MovePressed_AtEdge_StaysOnEdge(int startCell, int rowDelta, int columnDelta)
+		{
+			_presenter.Show(CreatePuzzle());
+			_view.ClickCell(startCell);
+
+			_keyboard.PressMove(rowDelta, columnDelta);
+
+			Assert.That(_view.CellsWith(CellHighlight.Selected), Is.EqualTo(new[] { startCell }));
 		}
 
 		private static Puzzle CreatePuzzle() =>
