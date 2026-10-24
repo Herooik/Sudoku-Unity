@@ -13,6 +13,8 @@
 - Results appear as a check on the pull request ("EditMode test results") and as a downloadable artifact.
 - Runs for an older commit on the same branch are cancelled when a newer one starts.
 - It can also be started by hand: Actions → Tests → Run workflow.
+- The game-ci CLI version is pinned with `cliVersion`. To update it, pick a tag from `https://github.com/game-ci/cli/releases` and confirm the pull request run is green.
+- Code coverage is off (`GAME_CI_COVERAGE_ENABLED: 'false'` on the test step): nothing reads the report, and the instrumentation costs memory. The action's `coverageEnabled` input does not work with CLI v0.1.72, which rejects the `--no-coverageEnabled` flag it sends.
 
 ## One-time setup: Unity license secrets
 

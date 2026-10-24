@@ -52,13 +52,25 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          # We never read the coverage report, and its instrumentation plus -debugCodeOptimization costs memory.
+          # Set through the CLI's GAME_CI_* environment fallback: the coverageEnabled input sends --no-coverageEnabled,
+          # which CLI v0.1.72 rejects as an unknown argument.
+          GAME_CI_COVERAGE_ENABLED: 'false'
         with:
           testMode: editmode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: EditMode test results
+          # "latest" is resolved through an unauthenticated GitHub API call that hosted runners often hit the rate limit on.
+          cliVersion: v0.1.72
 
+      # Tells an out-of-memory kill apart from other causes when the job dies with "Killed" and no test results.
+      - name: Show kernel OOM messages
+        if: failure()
+        run: sudo dmesg | grep -iE 'oom|killed process' || echo "No OOM messages in the kernel log."
+
+      # The output is empty when the step failed before starting Unity, and upload-artifact rejects an empty path.
       - name: Upload test results
-        if: always()
+        if: always() && steps.tests.outputs.artifactsPath != ''
         uses: actions/upload-artifact@v6
         with:
           name: editmode-test-results
