@@ -52,14 +52,16 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          # We never read the coverage report, and its instrumentation plus -debugCodeOptimization costs memory.
+          # Set through the CLI's GAME_CI_* environment fallback: the coverageEnabled input sends --no-coverageEnabled,
+          # which CLI v0.1.72 rejects as an unknown argument.
+          GAME_CI_COVERAGE_ENABLED: 'false'
         with:
           testMode: editmode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: EditMode test results
           # "latest" is resolved through an unauthenticated GitHub API call that hosted runners often hit the rate limit on.
           cliVersion: v0.1.72
-          # We never read the coverage report, and its instrumentation plus -debugCodeOptimization costs memory.
-          coverageEnabled: false
 
       # Tells an out-of-memory kill apart from other causes when the job dies with "Killed" and no test results.
       - name: Show kernel OOM messages
