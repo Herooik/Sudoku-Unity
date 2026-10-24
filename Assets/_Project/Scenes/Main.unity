@@ -466,6 +466,7 @@ MonoBehaviour:
   _menuView: {fileID: 8741059554483447993}
   _boardView: {fileID: 4270596265464333501}
   _numberPadView: {fileID: 4270596265464333503}
+  _keyboardInputView: {fileID: 4270596265464333504}
   _puzzleJson: {fileID: 4900000, guid: 3fd15fcaf0739694783620fba405fc2b, type: 3}
 --- !u!4 &1711788326
 Transform:
@@ -614,6 +615,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36e1cc4d88e8fb74daedf10c07660cdf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Sudoku.UI::Sudoku.UI.NumberPadView
+--- !u!114 &4270596265464333504 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 9040088823448422891, guid: 6e1e879cd6b0aa043b24f589bac5bd6b, type: 3}
+  m_PrefabInstance: {fileID: 4270596265464333500}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a77571aa0ae14fa4892c53ac93a97de3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Sudoku.UI::Sudoku.UI.KeyboardInputView
 --- !u!1001 &8741059554483447991
 PrefabInstance:
   m_ObjectHideFlags: 0
