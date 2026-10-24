@@ -56,9 +56,19 @@ jobs:
           testMode: editmode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: EditMode test results
+          # "latest" is resolved through an unauthenticated GitHub API call that hosted runners often hit the rate limit on.
+          cliVersion: v0.1.72
+          # We never read the coverage report, and its instrumentation plus -debugCodeOptimization costs memory.
+          coverageEnabled: false
 
+      # Tells an out-of-memory kill apart from other causes when the job dies with "Killed" and no test results.
+      - name: Show kernel OOM messages
+        if: failure()
+        run: sudo dmesg | grep -iE 'oom|killed process' || echo "No OOM messages in the kernel log."
+
+      # The output is empty when the step failed before starting Unity, and upload-artifact rejects an empty path.
       - name: Upload test results
-        if: always()
+        if: always() && steps.tests.outputs.artifactsPath != ''
         uses: actions/upload-artifact@v6
         with:
           name: editmode-test-results
