@@ -7,6 +7,7 @@ namespace Sudoku.UI
 	{
 		private const int NoSelection = -1;
 
+		private readonly IBoardKeyboardView _keyboard;
 		private readonly INumberPadView _numberPad;
 		private readonly IBoardView _view;
 
@@ -14,21 +15,28 @@ namespace Sudoku.UI
 		private bool[] _isPeerOfSelected = Array.Empty<bool>();
 		private int _selectedCell = NoSelection;
 
-		public BoardPresenter(IBoardView view, INumberPadView numberPad)
+		public BoardPresenter(IBoardView view, INumberPadView numberPad, IBoardKeyboardView keyboard)
 		{
 			_view = view;
 			_numberPad = numberPad;
+			_keyboard = keyboard;
 
-			_view.CellClicked += OnCellClicked;
-			_numberPad.DigitClicked += OnDigitClicked;
-			_numberPad.EraseClicked += OnEraseClicked;
+			_view.CellClicked += Select;
+			_numberPad.DigitClicked += TryPlaceDigit;
+			_numberPad.EraseClicked += TryErase;
+			_keyboard.DigitPressed += TryPlaceDigit;
+			_keyboard.ErasePressed += TryErase;
+			_keyboard.MovePressed += MoveSelection;
 		}
 
 		public void Dispose()
 		{
-			_view.CellClicked -= OnCellClicked;
-			_numberPad.DigitClicked -= OnDigitClicked;
-			_numberPad.EraseClicked -= OnEraseClicked;
+			_view.CellClicked -= Select;
+			_numberPad.DigitClicked -= TryPlaceDigit;
+			_numberPad.EraseClicked -= TryErase;
+			_keyboard.DigitPressed -= TryPlaceDigit;
+			_keyboard.ErasePressed -= TryErase;
+			_keyboard.MovePressed -= MoveSelection;
 			DetachBoard();
 		}
 
@@ -55,7 +63,7 @@ namespace Sudoku.UI
 			_view.SetVisible(true);
 		}
 
-		private void OnCellClicked(int cellIndex)
+		private void Select(int cellIndex)
 		{
 			if (_board == null)
 			{
@@ -66,15 +74,38 @@ namespace Sudoku.UI
 			RefreshHighlights();
 		}
 
-		private void OnDigitClicked(int digit)
+		private void MoveSelection(int rowDelta, int columnDelta)
 		{
-			if (CanEditSelectedCell())
+			if (_board == null)
+			{
+				return;
+			}
+
+			var shape = _board.Shape;
+
+			// The first arrow only shows where the selection is; the centre is the shortest way to every cell.
+			if (_selectedCell == NoSelection)
+			{
+				Select(shape.ToIndex(new CellPosition(shape.Size / 2, shape.Size / 2)));
+				return;
+			}
+
+			var position = shape.ToPosition(_selectedCell);
+			var row = Math.Clamp(position.Row + rowDelta, 0, shape.Size - 1);
+			var column = Math.Clamp(position.Column + columnDelta, 0, shape.Size - 1);
+			Select(shape.ToIndex(new CellPosition(row, column)));
+		}
+
+		private void TryPlaceDigit(int digit)
+		{
+			// A keyboard can type 9 on a 4×4 grid; the board would rightly throw on it.
+			if (CanEditSelectedCell() && digit <= _board.Shape.Size)
 			{
 				_board.SetValue(_selectedCell, digit);
 			}
 		}
 
-		private void OnEraseClicked()
+		private void TryErase()
 		{
 			if (CanEditSelectedCell())
 			{

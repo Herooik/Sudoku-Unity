@@ -227,7 +227,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 0
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
@@ -697,6 +697,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7628431642075783882}
   - component: {fileID: 1574334467251761213}
+  - component: {fileID: 9040088823448422891}
   m_Layer: 5
   m_Name: GameScreen
   m_TagString: Untagged
@@ -745,3 +746,15 @@ MonoBehaviour:
   _cellPrefab: {fileID: 9160292956505528115, guid: 8df0bac2e40e4a14093286b9f62457e4, type: 3}
   _theme: {fileID: 11400000, guid: c33e6b9e9b63d21498b6c3224c911125, type: 2}
   _solvedLabel: {fileID: 1253995324439276403}
+--- !u!114 &9040088823448422891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7824541440765460924}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a77571aa0ae14fa4892c53ac93a97de3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Sudoku.UI::Sudoku.UI.KeyboardInputView
