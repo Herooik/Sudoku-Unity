@@ -9,10 +9,32 @@
 ## Tests workflow
 
 - GameCI `unity-test-runner` runs the EditMode tests in Docker, on the Unity version from `ProjectSettings/ProjectVersion.txt`.
-- The `Library` folder is cached between runs, keyed on `Assets`, `Packages` and `ProjectSettings`, so later runs skip most of the import.
+- The `Library` folder is not cached: on Unity 6000.6 a restored `Library` is the suspected cause of the editor being killed during startup (see Troubleshooting), so every run imports the project from scratch.
 - Results appear as a check on the pull request ("EditMode test results") and as a downloadable artifact.
 - Runs for an older commit on the same branch are cancelled when a newer one starts.
 - It can also be started by hand: Actions → Tests → Run workflow.
+- The game-ci CLI version is pinned with `cliVersion`. To update it, pick a tag from `https://github.com/game-ci/cli/releases` and confirm the pull request run is green.
+- Code coverage is off (`GAME_CI_COVERAGE_ENABLED: 'false'` on the test step): nothing reads the report, and the instrumentation costs memory. The action's `coverageEnabled` input does not work with CLI v0.1.72, which rejects the `--no-coverageEnabled` flag it sends.
+
+## Troubleshooting
+
+Both failures below have passed on a re-run of the same commit, so **re-run the job first** (Actions → the failed run → Re-run failed jobs) before changing anything.
+
+### "Test run failed with exit code 1" and "Killed"
+
+Symptoms: the test step prints `Killed` right after the "Testing in editmode" header, there is no `editmode-results.xml`, and `editmode.log` in the artifact stops mid-startup (for example at `Begin MonoManager ReloadAssembly`) without an error.
+
+The Unity process got a SIGKILL (`Unexpected exit code 137` in the log). What is known so far:
+
+- **Not memory, so far.** It happened with code coverage off, and the "Show kernel OOM messages" step found no OOM kill. If that step does print OOM lines, the cause is memory after all: check what raised memory use (new packages, large assets, coverage turned back on).
+- **Suspected: a restored `Library` folder.** Another Unity 6000.6 project saw the same kill, about two seconds after `Registering precompiled unity dll's`, only after restoring a cached `Library` ([IvanMurzak/Unity-MCP#1000](https://github.com/IvanMurzak/Unity-MCP/pull/1000)). Unity 6.6 also keeps its Data Store state under `Library/DataStore`. That is why this workflow does not cache `Library`; if a cache is added back and the kill returns, remove it first.
+- **Still open:** Unity 6.6 allocates a 1 GB shared memory segment, and the action hard-codes `--dockerShmSize=1025m` with no input to raise it.
+
+If it keeps failing after re-runs, compare the `unityci/editor` image digest and the game-ci CLI version in the log with the last green run.
+
+### "Failed to resolve the latest game-ci CLI release"
+
+The action asks the GitHub API for the newest CLI release when `cliVersion` is `latest`, and that call is rate limited on shared runner IPs. The workflow pins `cliVersion`, so this should not happen; if it does, check that the pin is still in place and re-run. An "Input required and not supplied: path" error in the same run comes from the upload step and goes away with it.
 
 ## One-time setup: Unity license secrets
 
@@ -39,4 +61,4 @@ To check what is enforced without opening the settings: `https://api.github.com/
 
 ## Cost
 
-Public repositories have no limit on Actions minutes for standard runners, and those runners have 16 GB of RAM. Private repositories on the free plan get 2,000 minutes a month and 7 GB runners, which is not enough memory for a Unity import (the job is killed with exit code 137). One run takes roughly 10–15 minutes without a warm cache.
+Public repositories have no limit on Actions minutes for standard runners, and those runners have 16 GB of RAM. Private repositories on the free plan get 2,000 minutes a month and 7 GB runners, which is not enough memory for a Unity import (the job is killed with exit code 137). One run takes roughly 10–15 minutes, since every run imports the project from scratch.
