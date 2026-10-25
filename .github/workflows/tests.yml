@@ -35,14 +35,8 @@ jobs:
         with:
           lfs: true
 
-      # Re-importing the project from scratch is the slowest part of a Unity run.
-      - name: Cache Library
-        uses: actions/cache@v5
-        with:
-          path: Library
-          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
-          restore-keys: |
-            Library-
+      # No Library cache on purpose: with Unity 6000.6 a restored Library is the suspected cause of the editor being killed at startup
+      # (see "Troubleshooting" in docs/ci.md). Every run imports the project from scratch.
 
       # The Unity version is read from ProjectSettings/ProjectVersion.txt.
       - name: Run EditMode tests

@@ -9,7 +9,7 @@
 ## Tests workflow
 
 - GameCI `unity-test-runner` runs the EditMode tests in Docker, on the Unity version from `ProjectSettings/ProjectVersion.txt`.
-- The `Library` folder is cached between runs, keyed on `Assets`, `Packages` and `ProjectSettings`, so later runs skip most of the import.
+- The `Library` folder is not cached: on Unity 6000.6 a restored `Library` is the suspected cause of the editor being killed during startup (see Troubleshooting), so every run imports the project from scratch.
 - Results appear as a check on the pull request ("EditMode test results") and as a downloadable artifact.
 - Runs for an older commit on the same branch are cancelled when a newer one starts.
 - It can also be started by hand: Actions → Tests → Run workflow.
@@ -41,4 +41,4 @@ To check what is enforced without opening the settings: `https://api.github.com/
 
 ## Cost
 
-Public repositories have no limit on Actions minutes for standard runners, and those runners have 16 GB of RAM. Private repositories on the free plan get 2,000 minutes a month and 7 GB runners, which is not enough memory for a Unity import (the job is killed with exit code 137). One run takes roughly 10–15 minutes without a warm cache.
+Public repositories have no limit on Actions minutes for standard runners, and those runners have 16 GB of RAM. Private repositories on the free plan get 2,000 minutes a month and 7 GB runners, which is not enough memory for a Unity import (the job is killed with exit code 137). One run takes roughly 10–15 minutes, since every run imports the project from scratch.
