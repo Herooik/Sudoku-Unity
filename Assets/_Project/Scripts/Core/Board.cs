@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 
 namespace Sudoku.Core
 {
@@ -8,6 +9,12 @@ namespace Sudoku.Core
 	public sealed class Board
 	{
 		private readonly int[] _values;
+
+		// default(CandidateSet) is the empty set, so a new array already means "no notes anywhere".
+		private readonly CandidateSet[] _notes;
+
+		// Reused on every placement, so clearing peer notes allocates nothing after the first move.
+		private readonly List<int> _changedPeers = new List<int>();
 
 		public Board(Puzzle puzzle)
 		{
@@ -19,10 +26,12 @@ namespace Sudoku.Core
 			{
 				_values[i] = puzzle.Givens[i];
 			}
+
+			_notes = new CandidateSet[_values.Length];
 		}
 
-		// Every path that changes a digit (number pad, hint, undo, note clearing later) ends here,
-		// so the presenter redraws only what changed without each caller having to tell it.
+		// Raised whenever what a cell shows changes: its digit or its notes. Every path (number pad, hint, undo,
+		// note clearing on peers) ends here, so the presenter redraws only what changed without each caller telling it.
 		public event Action<int>? CellChanged;
 
 		public Puzzle Puzzle { get; }
@@ -83,6 +92,31 @@ namespace Sudoku.Core
 			ChangeValue(cellIndex, 0);
 		}
 
+		public CandidateSet GetNotes(int cellIndex)
+		{
+			ValidateIndex(cellIndex);
+			return _notes[cellIndex];
+		}
+
+		public void ToggleNote(int cellIndex, int digit)
+		{
+			ValidateIndex(cellIndex);
+
+			if (digit < 1 || digit > Shape.Size)
+			{
+				throw new ArgumentOutOfRangeException(nameof(digit), digit, $"Digit must be in 1..{Shape.Size}.");
+			}
+
+			// Notes belong to empty cells only; the presenter filters taps on givens and filled cells.
+			if (_values[cellIndex] != 0)
+			{
+				throw new InvalidOperationException($"Cell {cellIndex} holds a digit and cannot take notes.");
+			}
+
+			_notes[cellIndex] = _notes[cellIndex].Toggle(digit);
+			CellChanged?.Invoke(cellIndex);
+		}
+
 		private void ChangeValue(int cellIndex, int value)
 		{
 			// Locked here rather than only in the UI, so no later path (hint, undo, save restore) can overwrite a given.
@@ -97,7 +131,29 @@ namespace Sudoku.Core
 			}
 
 			_values[cellIndex] = value;
+			_notes[cellIndex] = CandidateSet.Empty;
+
+			// Only a correct digit clears it from peer notes: a wrong one must not wipe notes the player still needs.
+			_changedPeers.Clear();
+			if (value != 0 && value == Puzzle.Solution[cellIndex])
+			{
+				foreach (var peer in Shape.GetPeers(cellIndex))
+				{
+					var notes = _notes[peer].Without(value);
+					if (notes != _notes[peer])
+					{
+						_notes[peer] = notes;
+						_changedPeers.Add(peer);
+					}
+				}
+			}
+
+			// Events go out after all state is updated, so a subscriber never sees a half-applied move.
 			CellChanged?.Invoke(cellIndex);
+			foreach (var peer in _changedPeers)
+			{
+				CellChanged?.Invoke(peer);
+			}
 		}
 
 		private void ValidateIndex(int cellIndex)

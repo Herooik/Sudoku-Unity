@@ -26,6 +26,11 @@ namespace Sudoku.Tests.EditMode
 		private const int EmptyCellSolution = 2;
 		private const int EmptyCellWrongValue = 3;
 
+		// Peers of cell 1 (0,1) that are empty: 2, 4, 9, 13. Cell 6 (1,2) is empty and not a peer.
+		private const int EmptyPeerInRow = 2;
+		private const int EmptyPeerInColumn = 9;
+		private const int EmptyNonPeer = 6;
+
 		[Test]
 		public void Constructor_NullPuzzle_Throws()
 		{
@@ -231,6 +236,153 @@ namespace Sudoku.Tests.EditMode
 			FillFromSolution(board);
 
 			Assert.That(board.IsSolved, Is.True);
+		}
+
+		[Test]
+		public void GetNotes_NewBoard_EveryCellIsEmpty()
+		{
+			var board = Create4x4();
+
+			for (var i = 0; i < board.Shape.CellCount; i++)
+			{
+				Assert.That(board.GetNotes(i).IsEmpty, Is.True, $"cell {i}");
+			}
+		}
+
+		[Test]
+		public void ToggleNote_EmptyCell_AddsNote()
+		{
+			var board = Create4x4();
+
+			board.ToggleNote(EmptyCell, 3);
+
+			Assert.That(board.GetNotes(EmptyCell).Contains(3), Is.True);
+		}
+
+		[Test]
+		public void ToggleNote_Twice_RemovesNote()
+		{
+			var board = Create4x4();
+			board.ToggleNote(EmptyCell, 3);
+
+			board.ToggleNote(EmptyCell, 3);
+
+			Assert.That(board.GetNotes(EmptyCell).IsEmpty, Is.True);
+		}
+
+		[Test]
+		public void ToggleNote_EmptyCell_RaisesCellChanged()
+		{
+			var board = Create4x4();
+			var changed = RecordChanges(board);
+
+			board.ToggleNote(EmptyCell, 3);
+
+			Assert.That(changed, Is.EqualTo(new[] { EmptyCell }));
+		}
+
+		[Test]
+		public void ToggleNote_Given_Throws()
+		{
+			var board = Create4x4();
+
+			Assert.Throws<InvalidOperationException>(() => board.ToggleNote(GivenCell, 2));
+		}
+
+		[Test]
+		public void ToggleNote_CellWithPlayerDigit_Throws()
+		{
+			var board = Create4x4();
+			board.SetValue(EmptyCell, EmptyCellWrongValue);
+
+			Assert.Throws<InvalidOperationException>(() => board.ToggleNote(EmptyCell, 2));
+		}
+
+		[TestCase(0)]
+		[TestCase(5)]
+		public void ToggleNote_DigitOutsideGrid_Throws(int digit)
+		{
+			var board = Create4x4();
+
+			Assert.Throws<ArgumentOutOfRangeException>(() => board.ToggleNote(EmptyCell, digit));
+		}
+
+		[Test]
+		public void SetValue_CorrectDigit_RemovesItFromPeerNotes()
+		{
+			var board = Create4x4();
+			board.ToggleNote(EmptyPeerInRow, EmptyCellSolution);
+			board.ToggleNote(EmptyPeerInColumn, EmptyCellSolution);
+
+			board.SetValue(EmptyCell, EmptyCellSolution);
+
+			Assert.That(board.GetNotes(EmptyPeerInRow).Contains(EmptyCellSolution), Is.False);
+			Assert.That(board.GetNotes(EmptyPeerInColumn).Contains(EmptyCellSolution), Is.False);
+		}
+
+		[Test]
+		public void SetValue_CorrectDigit_KeepsOtherPeerNotesAndNonPeers()
+		{
+			var board = Create4x4();
+			board.ToggleNote(EmptyPeerInRow, EmptyCellSolution);
+			board.ToggleNote(EmptyPeerInRow, 4);
+			board.ToggleNote(EmptyNonPeer, EmptyCellSolution);
+
+			board.SetValue(EmptyCell, EmptyCellSolution);
+
+			Assert.That(board.GetNotes(EmptyPeerInRow).Contains(4), Is.True);
+			Assert.That(board.GetNotes(EmptyNonPeer).Contains(EmptyCellSolution), Is.True);
+		}
+
+		[Test]
+		public void SetValue_WrongDigit_KeepsPeerNotes()
+		{
+			var board = Create4x4();
+			board.ToggleNote(EmptyPeerInRow, EmptyCellWrongValue);
+
+			board.SetValue(EmptyCell, EmptyCellWrongValue);
+
+			Assert.That(board.GetNotes(EmptyPeerInRow).Contains(EmptyCellWrongValue), Is.True);
+		}
+
+		[TestCase(EmptyCellSolution)]
+		[TestCase(EmptyCellWrongValue)]
+		public void SetValue_AnyDigit_ClearsOwnNotes(int value)
+		{
+			var board = Create4x4();
+			board.ToggleNote(EmptyCell, 3);
+			board.ToggleNote(EmptyCell, 4);
+
+			board.SetValue(EmptyCell, value);
+
+			Assert.That(board.GetNotes(EmptyCell).IsEmpty, Is.True);
+		}
+
+		[Test]
+		public void SetValue_CorrectDigit_RaisesCellChangedForCellThenChangedPeersOnly()
+		{
+			var board = Create4x4();
+			board.ToggleNote(EmptyPeerInRow, EmptyCellSolution);
+			board.ToggleNote(EmptyPeerInColumn, EmptyCellSolution);
+			board.ToggleNote(4, 3);
+			var changed = RecordChanges(board);
+
+			board.SetValue(EmptyCell, EmptyCellSolution);
+
+			// Cell 4 is a peer too, but its notes did not change, so it is not redrawn.
+			Assert.That(changed, Is.EqualTo(new[] { EmptyCell, EmptyPeerInRow, EmptyPeerInColumn }));
+		}
+
+		[Test]
+		public void Clear_AfterPlacingDigit_LeavesCellWithoutNotes()
+		{
+			var board = Create4x4();
+			board.ToggleNote(EmptyCell, 3);
+			board.SetValue(EmptyCell, EmptyCellWrongValue);
+
+			board.Clear(EmptyCell);
+
+			Assert.That(board.GetNotes(EmptyCell).IsEmpty, Is.True);
 		}
 
 		private static Board Create4x4()

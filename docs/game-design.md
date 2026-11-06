@@ -54,7 +54,7 @@ Game:  Playing ⇄ Paused
 
 **A. A mistake is a digit that differs from the stored solution.** Every puzzle ships with its solution; the import validator checks that the solution is valid and unique. Rejected: "mistake = rule conflict", because a wrong digit without a conflict would slip through and the mistake limit would lose its meaning.
 
-**B. Notes.** Placing a digit removes that digit from the notes of all peers (same row, column, box). Undo restores those notes, so the command stores what it removed. Undo never refunds a mistake.
+**B. Notes.** Placing a **correct** digit removes that digit from the notes of all peers (same row, column, box). A wrong digit leaves peer notes alone, so a mistake does not wipe notes the player still needs; it is already shown in red, so this reveals nothing new. Placing any digit clears the cell's own notes, and Erase leaves the cell empty without notes. Undo restores cleared notes, so the command stores what it removed. Undo never refunds a mistake.
 
 **C. Difficulty is data, not an enum.** Each difficulty = id, display name, puzzle pack. Start with 3 packs; more levels are content, not code. AI can generate puzzles but cannot reliably rate them, so ratings stay coarse until there is a technique-based rater.
 
@@ -90,7 +90,8 @@ The solver and the uniqueness validator work on `GridShape` plus a digit array o
   - `CellPosition` is a readonly struct (row, column), a pure address. Not named `GridCell`, because "cell" is reserved for the board's view of a cell with its contents.
 - **`Board`**: the mutable state of one game, built from a `Puzzle` (the givens are copied, the puzzle stays untouched).
   - API: `GetValue(index)`, `IsGiven(index)`, `HasMistake(index)` (a digit that differs from the solution, decision A), `IsSolved`, `SetValue(index, value)` with value 1..N, `Clear(index)` for Erase. A bad index or value throws `ArgumentOutOfRangeException`; changing a given throws `InvalidOperationException`, so givens are locked by the board itself and no later path (hint, undo, save restore) can overwrite them.
-  - `CellChanged(index)` is raised only when a value really changes. Digits will change through many paths (number pad, keyboard, hint, undo, note clearing), so the presenter subscribes once instead of every caller telling the view. Rejected: methods returning the list of changed cells.
+  - Notes: `GetNotes(index)` and `ToggleNote(index, digit)`, one `CandidateSet` per cell. Notes belong to empty cells: toggling a note on a given or a filled cell throws `InvalidOperationException`, a digit outside 1..N throws `ArgumentOutOfRangeException`.
+  - `CellChanged(index)` is raised only when what the cell shows really changes: its value or its notes. A correct placement raises it for the cell and then for each peer whose notes it cleared, after all state is updated. Digits will change through many paths (number pad, keyboard, hint, undo, note clearing), so the presenter subscribes once instead of every caller telling the view. Rejected: methods returning the list of changed cells.
   - `Board` does not count mistakes or decide win/lose; that is `GameSession`. `IsSolved` scans all cells on every call. Rejected: a running counter of correct cells (more state to keep right, no measurable gain at 81–256 cells).
   - Addressing is the flat index, the same as `GridShape.GetPeers` and the board view; no `Cell` view struct until a caller needs value, given and mistake together.
 - **Cell addressing**: a flat index `0..N²-1` internally, a small row/column struct in the API for UI.
